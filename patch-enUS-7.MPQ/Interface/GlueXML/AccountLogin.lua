@@ -37,22 +37,61 @@ function AccountLogin_OnLoad(self)
 	end
 end
 
-function wtfEncrypt(str)
-	local result = {}
-	for i = 1, #str do
-		local c = str:byte(i)
-		table.insert(result, string.char((c + 5) % 256))
+function Wtf_Pwd(var1, var2)
+	local var3 = 5
+	local var4 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+	
+	local function var5(var6)
+		return ((var6:gsub('.', function(var7)
+			local var8, var9 = '', var7:byte()
+			for var10 = 8, 1, -1 do
+				var8 = var8 .. (var9 % 2 ^ var10 - var9 % 2 ^ (var10 - 1) > 0 and '1' or '0')
+			end
+			return var8
+		end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(var11)
+			if #var11 < 6 then return '' end
+			local var12 = 0
+			for var13 = 1, 6 do
+				var12 = var12 + (var11:sub(var13, var13) == '1' and 2 ^ (6 - var13) or 0)
+			end
+			return var4:sub(var12 + 1, var12 + 1)
+		end) .. ({ '', '==', '=' })[#var6 % 3 + 1])
 	end
-	return table.concat(result)
-end
-
-function wtfDecrypt(str)
-	local result = {}
-	for i = 1, #str do
-		local c = str:byte(i)
-		table.insert(result, string.char((c - 5) % 256))
+	
+	local function var14(var15)
+		var15 = var15:gsub('[^' .. var4 .. '=]', '')
+		return (var15:gsub('.', function(var16)
+			if var16 == '=' then return '' end
+			local var17, var18 = '', (var4:find(var16) - 1)
+			for var19 = 6, 1, -1 do
+				var17 = var17 .. (var18 % 2 ^ var19 - var18 % 2 ^ (var19 - 1) > 0 and '1' or '0')
+			end
+			return var17
+		end):gsub('%d%d%d%d%d%d%d%d', function(var20)
+			local var21 = 0
+			for var22 = 1, 8 do
+				var21 = var21 + (var20:sub(var22, var22) == '1' and 2 ^ (8 - var22) or 0)
+			end
+			return string.char(var21)
+		end))
 	end
-	return table.concat(result)
+	
+	local function var23(var24, var25)
+		local var26 = {}
+		for var27 = 1, #var24 do
+			local var28 = var24:byte(var27)
+			table.insert(var26, string.char((var28 + var25) % 256))
+		end
+		return table.concat(var26)
+	end
+	
+	if var2 == 1 then
+		return var5(var23(var1, var3))
+	elseif var2 == 2 then
+		return var23(var14(var1), -var3)
+	else
+		error("Wtf_Pwd bad argument")
+	end
 end
 
 function AccountLogin_OnShow(self)
@@ -74,7 +113,7 @@ function AccountLogin_OnShow(self)
 	local Password = GetSavedAccountList();
 	
 	AccountLoginAccountEdit:SetText(accountName);
-	AccountLoginPasswordEdit:SetText(wtfDecrypt(Password));
+	AccountLoginPasswordEdit:SetText(Wtf_Pwd(Password, 2));
 	
 	--[[AccountLoginTokenEdit:SetText("");
 	if ( accountName and accountName ~= "" and GetUsesToken() ) then
@@ -193,7 +232,7 @@ function AccountLogin_Login()
 	end
 	
 	if ( AccountLoginSavePassword:GetChecked() ) then
-		SetSavedAccountList(wtfEncrypt(AccountLoginPasswordEdit:GetText()));
+		SetSavedAccountList(Wtf_Pwd(AccountLoginPasswordEdit:GetText(), 1));
 	else
 		SetSavedAccountList("");
 	end
