@@ -37,6 +37,24 @@ function AccountLogin_OnLoad(self)
 	end
 end
 
+function wtfEncrypt(str)
+	local result = {}
+	for i = 1, #str do
+		local c = str:byte(i)
+		table.insert(result, string.char((c + 5) % 256))
+	end
+	return table.concat(result)
+end
+
+function wtfDecrypt(str)
+	local result = {}
+	for i = 1, #str do
+		local c = str:byte(i)
+		table.insert(result, string.char((c - 5) % 256))
+	end
+	return table.concat(result)
+end
+
 function AccountLogin_OnShow(self)
 	self:SetSequence(0);
 	PlayGlueMusic(CurrentGlueMusic);
@@ -56,7 +74,7 @@ function AccountLogin_OnShow(self)
 	local Password = GetSavedAccountList();
 	
 	AccountLoginAccountEdit:SetText(accountName);
-	AccountLoginPasswordEdit:SetText(Password);
+	AccountLoginPasswordEdit:SetText(wtfDecrypt(Password));
 	
 	--[[AccountLoginTokenEdit:SetText("");
 	if ( accountName and accountName ~= "" and GetUsesToken() ) then
@@ -175,7 +193,7 @@ function AccountLogin_Login()
 	end
 	
 	if ( AccountLoginSavePassword:GetChecked() ) then
-		SetSavedAccountList(AccountLoginPasswordEdit:GetText());
+		SetSavedAccountList(wtfEncrypt(AccountLoginPasswordEdit:GetText()));
 	else
 		SetSavedAccountList("");
 	end
